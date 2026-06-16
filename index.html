@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HW6155 — AutoGen Studio Tutorial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --maroon:#7A0019; --maroon-dark:#5a0012; --gold:#FFCC33;
+  --bg:#fafaf8; --surface:#fff; --border:#e4e2dc;
+  --text:#1a1a18; --text-muted:#5a5a54; --text-hint:#8a8a82;
+  --code-bg:#1e1e1e; --code-text:#d4d4d4;
+  --teal:#e1f5ee; --teal-t:#0a5a3a;
+  --amber:#fdf3dc; --amber-t:#7a4a08;
+  --blue:#e8f0fb; --blue-t:#1a4a8a;
+}
+body { font-family:'Inter',system-ui,sans-serif; font-size:15px; line-height:1.7; color:var(--text); background:var(--bg); }
+
+/* HEADER */
+header { background:var(--maroon); }
+.hdr { max-width:920px; margin:0 auto; padding:2.5rem 2rem 2rem; }
+.badge { display:inline-block; background:var(--gold); color:var(--maroon-dark); font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; padding:3px 10px; border-radius:4px; margin-bottom:1rem; }
+header h1 { font-size:1.9rem; font-weight:600; line-height:1.25; margin-bottom:.4rem; color:#fff; }
+header .sub { color:rgba(255,255,255,.7); font-size:14px; margin-bottom:1.5rem; }
+.meta { display:flex; gap:1.5rem; flex-wrap:wrap; }
+.mpill { display:flex; align-items:center; gap:6px; font-size:12px; color:rgba(255,255,255,.7); }
+
+/* NAV */
+nav { background:var(--maroon-dark); border-bottom:2px solid var(--gold); position:sticky; top:0; z-index:100; }
+.ni { max-width:920px; margin:0 auto; display:flex; overflow-x:auto; scrollbar-width:none; }
+.ni::-webkit-scrollbar { display:none; }
+nav a { text-decoration:none; color:rgba(255,255,255,.6); font-size:12px; font-weight:500; padding:10px 13px; white-space:nowrap; border-bottom:2px solid transparent; margin-bottom:-2px; transition:color .15s,border-color .15s; }
+nav a:hover { color:#fff; }
+nav a.active { color:var(--gold); border-bottom-color:var(--gold); }
+
+main { max-width:920px; margin:0 auto; padding:2.5rem 2rem 4rem; }
+
+/* SECTIONS */
+.sec { margin-top:3rem; scroll-margin-top:44px; }
+.sh { display:flex; align-items:center; gap:14px; margin-bottom:1.4rem; }
+.sn { width:36px; height:36px; border-radius:50%; background:var(--maroon); color:var(--gold); font-size:14px; font-weight:600; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.sh h2 { font-size:1.15rem; font-weight:600; color:var(--text); }
+.slabel { font-size:11px; font-weight:500; text-transform:uppercase; letter-spacing:.07em; color:var(--text-hint); }
+.prose { color:var(--text-muted); margin-bottom:.9rem; }
+.prose strong { color:var(--text); font-weight:500; }
+
+/* OVERVIEW GRID */
+.ovg { display:grid; grid-template-columns:repeat(auto-fit,minmax(155px,1fr)); gap:12px; margin:1.5rem 0; }
+.ovc { background:var(--surface); border:.5px solid var(--border); border-radius:12px; padding:1rem; }
+.ovi { width:30px; height:30px; border-radius:8px; background:var(--maroon); display:flex; align-items:center; justify-content:center; margin-bottom:8px; }
+.ovc h3 { font-size:13px; font-weight:600; color:var(--text); margin-bottom:2px; }
+.ovc p { font-size:12px; color:var(--text-muted); line-height:1.4; }
+
+/* SUBSTEPS */
+.substeps { display:flex; flex-direction:column; gap:14px; }
+.substep { background:var(--surface); border:.5px solid var(--border); border-radius:10px; padding:1rem 1.2rem; display:flex; gap:14px; align-items:flex-start; }
+.ssn { width:24px; height:24px; border-radius:50%; background:var(--blue); color:var(--blue-t); font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
+.ssb { flex:1; }
+.ssb strong { display:block; font-size:14px; font-weight:500; color:var(--text); margin-bottom:4px; }
+.ssb span, .ssb p { font-size:13px; color:var(--text-muted); }
+
+/* DUAL TAB CODE */
+.dc { border-radius:10px; overflow:hidden; margin:.9rem 0; border:1px solid #333; }
+.dct { display:flex; background:#252526; border-bottom:1px solid #333; }
+.dctb { display:flex; align-items:center; gap:6px; padding:7px 15px; font-size:12px; font-weight:500; font-family:'Inter',sans-serif; cursor:pointer; border:none; background:transparent; color:#888; border-bottom:2px solid transparent; transition:color .15s,border-color .15s; }
+.dctb .dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.dctb.mac .dot { background:#f5a623; }
+.dctb.win .dot { background:#0078d4; }
+.dctb.mac.on { color:#f5a623; border-bottom-color:#f5a623; }
+.dctb.win.on { color:#5eaeff; border-bottom-color:#5eaeff; }
+.dp { display:none; }
+.dp.on { display:block; }
+.cr { display:flex; justify-content:flex-end; padding:5px 10px 0; background:var(--code-bg); }
+.cb { font-size:11px; color:#888; background:none; border:1px solid #444; border-radius:4px; padding:2px 8px; cursor:pointer; font-family:inherit; }
+.cb:hover { color:#bbb; border-color:#666; }
+.cb.ok { color:#4ec9b0; border-color:#4ec9b0; }
+.dp pre { background:var(--code-bg); padding:1rem 1.2rem; overflow-x:auto; font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.65; color:var(--code-text); margin:0; }
+
+/* SINGLE code */
+.sc { background:var(--code-bg); border-radius:10px; overflow:hidden; margin:.9rem 0; }
+.sch { display:flex; align-items:center; justify-content:space-between; padding:7px 14px; background:#2a2a2a; border-bottom:1px solid #333; }
+.scl { font-size:11px; font-weight:500; color:#888; text-transform:uppercase; letter-spacing:.06em; }
+.sc pre { padding:1rem 1.2rem; overflow-x:auto; font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.6; color:var(--code-text); }
+
+/* SYNTAX */
+.kw{color:#569cd6} .fn{color:#dcdcaa} .st{color:#ce9178} .cm{color:#6a9955;font-style:italic} .nu{color:#b5cea8} .cl{color:#4ec9b0} .va{color:#9cdcfe} .ps{color:#5eaeff}
+
+/* INFO BOXES */
+.ib { border-radius:8px; padding:.8rem 1rem; margin:.9rem 0; display:flex; gap:10px; align-items:flex-start; font-size:13px; }
+.ib svg { flex-shrink:0; margin-top:2px; }
+.ib.tip { background:var(--teal); color:var(--teal-t); border-left:3px solid #1d9e75; }
+.ib.warn { background:var(--amber); color:var(--amber-t); border-left:3px solid #ba7517; }
+.ib.note { background:var(--blue); color:var(--blue-t); border-left:3px solid #185fa5; }
+
+/* UI STEP CARDS — numbered walkthrough with screenshot zone */
+.ui-steps { display:flex; flex-direction:column; gap:0; margin:1rem 0; }
+.ui-step { display:flex; gap:16px; padding:1.1rem 0; border-bottom:.5px solid var(--border); }
+.ui-step:last-child { border-bottom:none; }
+.ui-step-num { width:28px; height:28px; border-radius:50%; background:var(--maroon); color:var(--gold); font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
+.ui-step-body { flex:1; }
+.ui-step-body strong { display:block; font-size:14px; font-weight:500; color:var(--text); margin-bottom:4px; }
+.ui-step-body p { font-size:13px; color:var(--text-muted); margin-bottom:6px; }
+.ui-step-body .path { font-family:'JetBrains Mono',monospace; font-size:12px; background:#f0ede6; color:var(--maroon); padding:3px 8px; border-radius:4px; display:inline-block; margin:4px 0; }
+.ui-step-body .ui-img { background:linear-gradient(135deg,#f0ede6 0%,#e8e4dc 100%); border:.5px solid var(--border); border-radius:8px; padding:.6rem 1rem; font-size:12px; color:var(--text-hint); text-align:center; margin-top:8px; font-style:italic; }
+
+/* JSON block  */
+.json-block { background:var(--code-bg); border-radius:10px; overflow:hidden; margin:.9rem 0; }
+.json-block .jh { display:flex; align-items:center; justify-content:space-between; padding:7px 14px; background:#2a2a2a; border-bottom:1px solid #333; }
+.json-block .jh span { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:.06em; }
+.json-block pre { padding:1rem 1.2rem; overflow-x:auto; font-family:'JetBrains Mono',monospace; font-size:12.5px; line-height:1.65; color:var(--code-text); }
+.jk{color:#9cdcfe} .jv{color:#ce9178} .jn{color:#b5cea8} .jb{color:#569cd6}
+
+/* AGENT CARDS */
+.ag { display:grid; grid-template-columns:repeat(auto-fit,minmax(195px,1fr)); gap:14px; margin:1rem 0; }
+.ac { background:var(--surface); border:.5px solid var(--border); border-radius:10px; padding:1rem; }
+.act { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.ai { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+.ai.m{background:var(--maroon)} .ai.b{background:#1a4a9a} .ai.t{background:#0f6e56} .ai.a{background:#7a4a08}
+.ac h4 { font-size:13px; font-weight:600; color:var(--text); }
+.ac .role { font-size:11px; color:var(--text-hint); text-transform:uppercase; letter-spacing:.06em; }
+.ac p { font-size:12px; color:var(--text-muted); line-height:1.5; }
+
+/* FLOW */
+.flow { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin:1rem 0; }
+.fn2 { background:var(--surface); border:.5px solid var(--border); border-radius:8px; padding:7px 13px; font-size:12px; font-weight:500; color:var(--text); text-align:center; min-width:80px; }
+.fn2.acc { background:var(--maroon); color:var(--gold); border-color:var(--maroon); }
+.farr { color:var(--text-hint); font-size:18px; flex-shrink:0; }
+
+.divider { border:none; border-top:.5px solid var(--border); margin:2.5rem 0 0; }
+
+/* SECTION LABEL */
+.section-label { display:inline-block; font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--maroon); background:#f0ede6; padding:3px 10px; border-radius:4px; margin-bottom:.75rem; }
+
+.ic { font-family:'JetBrains Mono',monospace; font-size:12px; background:#f0ede6; color:var(--maroon); padding:1px 6px; border-radius:3px; }
+.ic-b { font-family:'JetBrains Mono',monospace; font-size:12px; background:rgba(26,74,138,.12); color:#1a4a8a; padding:1px 6px; border-radius:3px; }
+.ic-t { font-family:'JetBrains Mono',monospace; font-size:12px; background:rgba(10,90,58,.12); color:#0a5a3a; padding:1px 6px; border-radius:3px; }
+.ic-a { font-family:'JetBrains Mono',monospace; font-size:12px; background:rgba(122,74,8,.12); color:#7a4a08; padding:1px 6px; border-radius:3px; }
+
+/* ENV TABLE */
+.et { width:100%; border-collapse:collapse; font-size:13px; margin:1rem 0; background:var(--surface); border-radius:10px; overflow:hidden; border:.5px solid var(--border); }
+.et th { background:#f0ede6; font-weight:500; color:var(--text); padding:8px 12px; text-align:left; font-size:12px; text-transform:uppercase; letter-spacing:.05em; border-bottom:.5px solid var(--border); }
+.et td { padding:8px 12px; color:var(--text-muted); border-bottom:.5px solid var(--border); vertical-align:top; }
+.et tr:last-child td { border-bottom:none; }
+.et code { font-family:'JetBrains Mono',monospace; font-size:12px; background:#f0ede6; color:var(--maroon); padding:2px 5px; border-radius:3px; }
+
+footer { background:var(--maroon); color:rgba(255,255,255,.6); font-size:12px; padding:1.5rem 2rem; text-align:center; }
+footer span { color:var(--gold); }
+</style>
+</head>
+<body>
+
+<header>
+<div class="hdr">
+  <div class="badge">MSBA 6155 · Generative AI in Business</div>
+  <h1>AutoGen Studio — No-Code Multi-Agent Builder</h1>
+  <p class="sub">Step-by-step tutorial using the AutoGen Studio drag-and-drop web interface with Microsoft Azure AI Foundry · macOS &amp; Windows</p>
+  <div class="meta">
+    <div class="mpill"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 7l9-4 9 4v10l-9 4-9-4V7z"/></svg> Folder: hw6155</div>
+    <div class="mpill"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> ~45 minutes</div>
+    <div class="mpill"><svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9V3z"/></svg> No Python coding required</div>
+  </div>
+</div>
+</header>
+
+<nav>
+<div class="ni">
+  <a href="#overview" class="active">Overview</a>
+  <a href="#step1">1 · Install Studio</a>
+  <a href="#step2">2 · Launch UI</a>
+  <a href="#step3">3 · Add Azure Model</a>
+  <a href="#step4">4 · WebSurfer Team</a>
+  <a href="#step5">5 · Deep Research Team</a>
+  <a href="#step6">6 · Run in Playground</a>
+  <a href="#step7">7 · Export &amp; Code</a>
+  <a href="#step8">8 · Exercises</a>
+</div>
+</nav>
+
+<main>
+
+<!-- OVERVIEW -->
+<section class="sec" id="overview">
+  <p class="prose">In this tutorial you will install <strong>AutoGen Studio</strong> — Microsoft's no-code web interface for building multi-agent systems — launch it from VS Code's terminal, connect it to your <strong>Azure AI Foundry</strong> endpoint, and build two agent teams using drag-and-drop: the <strong>WebSurfer Team</strong> and the <strong>Deep Research Team</strong>.</p>
+  <p class="prose" style="margin-top:.5rem">Every terminal command has a <strong style="color:#f5a623">macOS</strong> and <strong style="color:#5eaeff">Windows PowerShell</strong> tab. All Studio steps are the same on both platforms — you just use your browser.</p>
+
+  <div class="ovg">
+    <div class="ovc"><div class="ovi"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#FFCC33" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg></div><h3>AutoGen Studio</h3><p>No-code web UI — drag agents onto a canvas, connect them, run tasks</p></div>
+    <div class="ovc"><div class="ovi"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#FFCC33" stroke-width="2"><path d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg></div><h3>Azure AI Foundry</h3><p>Your GPT-4o deployment, configured once in the Studio model library</p></div>
+    <div class="ovc"><div class="ovi"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#FFCC33" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div><h3>WebSurfer Team</h3><p>MultimodalWebSurfer + AssistantAgent browsing the live web</p></div>
+    <div class="ovc"><div class="ovi"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#FFCC33" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div><h3>Deep Research Team</h3><p>Four-agent SelectorGroupChat for structured research reports</p></div>
+    <div class="ovc"><div class="ovi"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#FFCC33" stroke-width="2"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg></div><h3>JSON Export</h3><p>Every team you build can be exported as runnable Python code</p></div>
+  </div>
+
+  <div class="ib note">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+    <div><strong>AutoGen Studio is a prototyping tool.</strong> It is great for building, testing, and demonstrating agent workflows visually. For production deployment, Microsoft recommends translating your team to Python code (Step 7 shows how).</div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- STEP 1 -->
+<section class="sec" id="step1">
+  <div class="sh"><div class="sn">1</div><div><div class="slabel">Installation</div><h2>Install AutoGen Studio into your hw6155 environment</h2></div></div>
+  <p class="prose">There are four sub-steps here that must happen <strong>in order</strong>: verify Python → create the virtual environment → activate it → install packages. You cannot skip or reorder them.</p>
+
+  <div class="substeps">
+
+    <div class="substep">
+      <div class="ssn">a</div>
+      <div class="ssb">
+        <strong>Verify Python is installed first</strong>
+        <span>Before anything else, confirm Python 3.10 or later is available on your machine:</span>
+        <div class="dc" style="margin-top:8px">
+          <div class="dct">
+            <button class="dctb mac on" onclick="sw(this,'mac')"><span class="dot"></span>macOS / Linux</button>
+            <button class="dctb win" onclick="sw(this,'win')"><span class="dot"></span>PowerShell</button>
+          </div>
+          <div class="dp on" data-os="mac"><div class="cr"><button class="cb" onclick="cp(this)">Copy</button></div>
+<pre>python3 --version
+<span class="cm"># Expected: Python 3.10.x or higher</span></pre></div>
+          <div class="dp" data-os="win"><div class="cr"><button class="cb" onclick="cp(this)">Copy</button></div>
+<pre>python --version
+<span class="cm"># Expected: Python 3.10.x or higher</span></pre></div>
+        </div>
+        <span style="display:block;margin-top:6px">If you see <em>"Python was not found"</em> or <em>"not recognized"</em>, install Python from <a href="https://python.org/downloads" style="color:var(--maroon)">python.org/downloads</a> and check <strong>"Add Python to PATH"</strong> on the first screen of the installer. Then close and reopen PowerShell before continuing.</span>
+      </div>
+    </div>
+
+    <div class="substep">
+      <div class="ssn">b</div>
+      <div class="ssb">
+        <strong>Navigate to hw6155 and create the virtual environment</strong>
+        <span>The virtual environment must be <strong>created before it can be activated</strong> — <code class="ic">Activate.ps1</code> does not exist until this step runs. You only need to do this once per project.</span>
+        <div class="dc" style="margin-top:8px">
+          <div class="dct">
+            <button class="dctb mac on" onclick="sw(this,'mac')"><span class="dot"></span>macOS / Linux</button>
+            <button class="dctb win" onclick="sw(this,'win')"><span class="dot"></span>PowerShell</button>
+          </div>
+          <div class="dp on" data-os="mac"><div class="cr"><button class="cb" onclick="cp(this)">Copy</button></div>
+<pre>cd hw6155
+python3 -m venv .venv
+<span class="cm"># Creates the .venv folder with its own Python and pip</span></pre></div>
+          <div class="dp" data-os="win"><div class="cr"><button class="cb" onclick="cp(this)">Copy</button></div>
+<pre><span class="ps">Set-Location</span> hw6155
+python -m venv .venv
+<span class="cm"># Creates the .venv folder with its own Python and pip</span></pre></div>
+        </div>
+        <span style="display:block;margin-top:6px">This creates a <code class="ic">.venv</code> folder inside hw6155. On Windows it contains <code class="ic">.venv\Scripts\Activate.ps1</code>. On macOS it contains <code class="ic">.venv/bin/activate</code>. Nothing is installed yet — the next step activates it.</span>
+      </div>
+    </div>
+
+    <div class="substep">
+      <div class="ssn">c</div>
+      <div class="ssb">
+        <strong>Activate the virtual environment</strong>
+        <span>Activation tells your terminal to use the packages inside <code class="ic">.venv</code> instead of the system-wide Python. You need to do this <strong>every time you open a new terminal window</strong>.</span>
+        <div class="dc" style="margin-top:8px">
+          <div class="dct">
+            <button class="dctb mac on" onclick="sw(this,'mac')"><span class="dot"></span>macOS / Linux</button>
+            <button class="dctb win" onclick="sw(this,'win')"><span class="dot"></span>PowerShell</button>
+          </div>
+          <div class="dp on" data-os="mac"><div class="cr"><button class="cb" onclick="cp(this)">Copy</button></div>
+<pre>source .venv/bin/activate
+<span class="cm"># Prompt changes to: (.venv) $</span></pre></div>
+          <div class="dp" data-os="win"><div class="cr"><button class="cb" onclick="cp(this)">Copy</button></div>
+<pre>.venv\Scripts\Activate.ps1
+<span class="cm"># Prompt changes to: (.venv) PS C:\...&gt;</span></pre></div>
+        </div>
+        <span style="display:block;margin-top:6px">Once activated, your prompt shows <strong>(.venv)</strong> at the start. This confirms all <code class="ic">pip install</code> commands will install into the isolated environment, not globally.</span>
+      </div>
+    </div>
+
+    <div class="substep">
+      <div class="ssn">d</div>
+      <div class="ssb">
+        <strong>Install AutoGen Studio and extensions</strong>
+        <span>Install everything in <strong>one single command</strong> so pip can resolve compatible versions across all packages at once. Installing them separately causes version conflicts — for example, autogenstudio 0.4.x requires autogen-agentchat below 0.6, but a separate install pulls in 0.7.x which breaks things.</span>
+        <div class="dc" style="margin-top:8px">
+          <div class="dct">
+            <button class="dctb mac on" onclick="sw(this,'mac')"><span class="dot"></span>macOS / Linux</button>
+            <button class="dctb win" onclick="sw(this,'win')"><span class="dot"></span>PowerShell</button>
+          </div>
+          <div class="dp on" data-os="mac"><div class="cr"><button class="cb" onclick="cp(this)">Copy</button></div>
+<pre><span class="cm"># Install all packages together so pip picks compatible versions</span>
+pip install \
+  "autogenstudio==0.4.2.2" \
+  "autogen-agentchat>=0.4.9.2,&lt;0.6" \
+  "autogen-core>=0.4.9.2,&lt;0.6" \
+  "autogen-ext[web-surfer,magentic-one,openai,azure]>=0.4.2,&lt;0.6"
+
+<span class="cm"># Install the Playwright robot browser (see note below)</span>
+playwright install --with-deps chromium</pre></div>
+          <div class="dp" data-os="win"><div class="cr"><button class="cb" onclick="cp(this)">Copy</button></div>
+<pre><span class="cm"># Install all packages together so pip picks compatible versions</span>
+pip install `
+  "autogenstudio==0.4.2.2" `
+  "autogen-agentchat>=0.4.9.2,&lt;0.6" `
+  "autogen-core>=0.4.9.2,&lt;0.6" `
+  "autogen-ext[web-surfer,magentic-one,openai,azure]>=0.4.2,&lt;0.6"
+
+<span class="cm"># Install the Playwright robot browser (see note below)</span>
+playwright install --with-deps chromium</pre></div>
+        </div>
+
+        <div class="ib warn" style="margin-top:.75rem">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+          <div><strong>Already installed packages separately and seeing version conflict errors?</strong> Uninstall everything first, then re-run the combined command above:
+          <div class="dc" style="margin-top:8px">
+            <div class="dct">
+              <button class="dctb mac on" onclick="sw(this,'mac')"><span class="dot"></span>macOS / Linux</button>
+              <button class="dctb win" onclick="sw(this,'win')"><span class="dot"></span>PowerShell</button>
+            </div>
+            <div class="dp on" data-os="mac"><div class="cr"><button class="cb" onclick="cp(this)">Copy</button></div>
+<pre>pip uninstall autogenstudio autogen-agentchat autogen-core autogen-ext -y</pre></div>
+            <div class="dp" data-os="win"><div class="cr"><button class="cb" onclick="cp(this)">Copy</button></div>
+<pre>pip uninstall autogenstudio autogen-agentchat autogen-core autogen-ext -y</pre></div>
+          </div>
+          Then run the combined install command above.
+          </div>
+        </div>
+
+        <div class="ib note" style="margin-top:1rem">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <div>
+            <strong>Why Playwright and not your regular browser?</strong><br>
+            The WebSurfer agent needs to <em>control</em> a browser through code — opening tabs, typing searches, clicking links, scrolling, and reading page text back into Python. Your regular Chrome or Edge cannot be driven this way. Playwright installs a special version of Chromium with automation hooks built in that the agent operates like a robot.<br><br>
+            <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:6px">
+              <thead><tr>
+                <th style="text-align:left;padding:5px 8px;background:rgba(26,74,138,.12);border-radius:4px 0 0 0;font-weight:600"></th>
+                <th style="text-align:left;padding:5px 8px;background:rgba(26,74,138,.12);font-weight:600">Your regular browser</th>
+                <th style="text-align:left;padding:5px 8px;background:rgba(26,74,138,.12);border-radius:0 4px 0 0;font-weight:600">Playwright Chromium</th>
+              </tr></thead>
+              <tbody>
+                <tr><td style="padding:5px 8px;border-bottom:1px solid rgba(26,74,138,.1)">Who controls it</td><td style="padding:5px 8px;border-bottom:1px solid rgba(26,74,138,.1)">You (mouse &amp; keyboard)</td><td style="padding:5px 8px;border-bottom:1px solid rgba(26,74,138,.1)">The AutoGen agent (code)</td></tr>
+                <tr><td style="padding:5px 8px;border-bottom:1px solid rgba(26,74,138,.1)">Agents can drive it</td><td style="padding:5px 8px;border-bottom:1px solid rgba(26,74,138,.1)">❌ No</td><td style="padding:5px 8px;border-bottom:1px solid rgba(26,74,138,.1)">✅ Yes</td></tr>
+                <tr><td style="padding:5px 8px;border-bottom:1px solid rgba(26,74,138,.1)">Visible on screen</td><td style="padding:5px 8px;border-bottom:1px solid rgba(26,74,138,.1)">Always</td><td style="padding:5px 8px;border-bottom:1px solid rgba(26,74,138,.1)">Optional (headless mode)</td></tr>
+                <tr><td style="padding:5px 8px">Purpose</td><td style="padding:5px 8px">General browsing</td><td style="padding:5px 8px">Agent web automation</td></tr>
+              </tbody>
+            </table>
+            <br>
+            By default the agent runs Chromium invisibly in the background (<strong>headless mode</strong>). In Step 5 you can switch to <strong>headless=False</strong> to watch a real browser window open on your screen and the agent navigate by itself in real time — a great classroom demonstration.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="substep">
+      <div class="ssn">e</div>
+      <div class="ssb">
+        <strong>Verify the installation</strong>
+        <span>Use <code class="ic">pip show</code> to confirm the version — <code class="ic">autogenstudio --version</code> is not a valid command and will return an error.</span>
+        <div class="dc" style="margin-top:8px">
+          <div class="dct">
+            <button class="dctb mac on" onclick="sw(this,'mac')"><span class="dot"></span>macOS / Linux</button>
+            <button class="dctb win" onclick="sw(this,'win')"><span class="dot"></span>PowerShell</button>
+          </div>
+          <div class="dp on" data-os="mac"><div class="cr"><button class="cb" onclick="cp(this)">Copy</button></div>
+<pre>pip show autogenstudio
+<span class="cm"># Look for: Version: 0.4.2.2</span>
+<span class="cm"># Also confirm the autogen packages:</span>
+pip show autogen-agentchat | grep Version
+pip show autogen-core | grep Version</pre></div>
+          <div class="dp" data-os="win"><div class="cr"><button class="cb" onclick="cp(this)">Copy</button></div>
+<pre>pip show autogenstudio
+<span class="cm"># Look for: Version: 0.4.2.2</span>
+<span class="cm"># Also confirm the autogen packages:</span>
+pip show autogen-agentchat | findstr Version
+pip show autogen-core | findstr Version</pre></div>
+        </div>
+        <span style="display:block;margin-top:6px">You should see <strong>Version: 0.4.2.2</strong> for autogenstudio and <strong>Version: 0.4.x.x</strong> for both autogen-agentchat and autogen-core. If autogen-agentchat shows 0.7.x, the version conflict is still present — go back to step d and run the uninstall first.</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="ib note" style="margin-top:1rem">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+    <div><strong>The order matters every session.</strong> Steps b and c are one-time setup. But every time you open a new terminal to work on hw6155, you must run step c (activate) before running any <code class="ic-b">pip</code>, <code class="ic-b">autogenstudio</code>, or <code class="ic-b">python</code> commands — otherwise they run against your global Python instead of the isolated environment.</div>
+  </div>
+
+  <div class="ib warn" style="margin-top:.75rem">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+    <div>
+      <strong>Windows execution policy error</strong> — if you see <em>"running scripts is disabled on this system"</em>, you have three options. Try them in order:
+      <br><br>
+      <strong>Option 1 — Fix the policy for your user account (recommended):</strong><br>
+      Run this in PowerShell, type <code class="ic-a">Y</code> when prompted, then retry <code class="ic-a">Activate.ps1</code>:
+      <div class="dc" style="margin-top:8px">
+        <div class="dct">
+          <button class="dctb win on" onclick="sw(this,'win')" style="pointer-events:none"><span class="dot"></span>PowerShell</button>
+        </div>
+        <div class="dp on" data-os="win"><div class="cr"><button class="cb" onclick="cp(this)">Copy</button></div>
+<pre>Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+<span class="cm"># Type Y and press Enter when prompted</span>
+<span class="cm"># Then run the activation again:</span>
+.venv\Scripts\Activate.ps1</pre></div>
+      </div>
+      This only affects your own user account, not the whole machine. It allows locally created scripts like <code class="ic-a">Activate.ps1</code> to run while still blocking untrusted scripts from the internet.<br><br>
+
+      <strong>Option 2 — Bypass for one session (if Option 1 is blocked by IT):</strong>
+      <div class="dc" style="margin-top:8px">
+        <div class="dct">
+          <button class="dctb win on" onclick="sw(this,'win')" style="pointer-events:none"><span class="dot"></span>PowerShell</button>
+        </div>
+        <div class="dp on" data-os="win"><div class="cr"><button class="cb" onclick="cp(this)">Copy</button></div>
+<pre>powershell -ExecutionPolicy Bypass -File .venv\Scripts\Activate.ps1</pre></div>
+      </div>
+
+      <strong>Option 3 — Use Command Prompt instead of PowerShell (always works):</strong><br>
+      In VS Code, click the <strong>˅</strong> dropdown arrow next to the <strong>+</strong> in the terminal panel and choose <strong>Command Prompt</strong>. Then run:
+      <div class="dc" style="margin-top:8px">
+        <div class="dct">
+          <button class="dctb win on" onclick="sw(this,'win')" style="pointer-events:none"><span class="dot"></span>Command Prompt (cmd)</button>
+        </div>
+        <div class="dp on" data-os="win"><div class="cr"><button class="cb" onclick="cp(this)">Copy</button></div>
+<pre>.venv\Scripts\activate.bat
+<span class="cm">:: Note: .bat not .ps1 — no execution policy restrictions</span>
+<span class="cm">:: Prompt changes to: (.venv) C:\...&gt;</span></pre></div>
+      </div>
+      The <code class="ic-a">.bat</code> file does exactly the same thing as <code class="ic-a">.ps1</code> — activates your virtual environment — but Command Prompt has no execution policy restrictions. Use <code class="ic-a">activate.bat</code> for all future sessions if you prefer cmd over PowerShell.
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- STEP 2 -->
+<section class="sec" id="step2">
+  <div class="sh"><div class="sn">2</div><div><div class="slabel">Launch</div><h2>Start AutoGen Studio and open the web UI</h2></div></div>
+  <p class="prose">AutoGen Studio runs as a local web server. You start it from the VS Code integrated terminal and access it in your browser — no cloud account needed for the UI itself.</p>
+
+  <div class="substeps">
+    <div class="substep">
+      <div class="ssn">a</div>
+      <div class="ssb">
+        <strong>Launch the Studio server from the hw6155 folder</strong>
+        <div class="dc">
+          <div class="dct">
+            <button class="dctb mac on" onclick="sw(this,'mac')"><span class="dot"></span>macOS / Linux</button>
+            <button class="dctb win" onclick="sw(this,'win')"><span class="dot"></span>PowerShell</button>
+          </div>
+          <div class="dp on" data-os="mac"><div class="cr"><button class="cb" onclick="cp(this)">Copy</button></div>
+<pre>autogenstudio ui --port 8080 --appdir ./studio_data
+<span class="cm"># --appdir stores all your teams, agents, and sessions locally</span></pre></div>
+          <div class="dp" data-os="win"><div class="cr"><button class="cb" onclick="cp(this)">Copy</button></div>
+<pre>autogenstudio ui --port 8080 --appdir .\studio_data
+<span class="cm"># --appdir stores all your teams, agents, and sessions locally</span></pre></div>
+        </div>
+        <span style="display:block;margin-top:6px">You will see: <code class="ic-t">Application startup complete. Navigate to http://localhost:8080</code></span>
+      </div>
+    </div>
+
+    <div class="substep">
+      <div class="ssn">b</div>
+      <div class="ssb">
+        <strong>Open AutoGen Studio in your browser</strong>
+        <span>Open any browser (Chrome, Edge, or Firefox) and go to:</span>
+        <div class="sc" style="margin-top:8px">
+          <div class="sch"><span class="scl">Browser URL</span><button class="cb" onclick="cpb(this)">Copy</button></div>
+          <pre>http://localhost:8080</pre>
+        </div>
+        <span style="display:block;margin-top:6px">You will see the AutoGen Studio home screen with a <strong>Team Builder</strong>, <strong>Playground</strong>, and <strong>Gallery</strong> in the left sidebar.</span>
+      </div>
+    </div>
+
+    <div class="substep">
+      <div class="ssn">c</div>
+      <div class="ssb">
+        <strong>Keep the terminal running while you use Studio</strong>
+        <span>Do not close the terminal or press Ctrl+C — the Studio server must stay running. Open a <em>second</em> terminal tab in VS Code (<strong>+</strong> button in the terminal panel) for any other commands.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ib tip">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <div>All teams, sessions, and agent configurations are saved to the <code class="ic-t">./studio_data</code> folder inside hw6155. This means your work persists between sessions and can be version-controlled.</div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- STEP 3 -->
+<section class="sec" id="step3">
+  <div class="sh"><div class="sn">3</div><div><div class="slabel">Configuration</div><h2>Register your Azure AI Foundry model in Studio</h2></div></div>
+  <p class="prose">Before building any team, you must tell AutoGen Studio how to reach your Azure AI Foundry deployment. You do this once in the <strong>Model Library</strong>, and then every agent you create can use it.</p>
+
+  <div class="ib note" style="margin-bottom:1.2rem">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+    <div><strong>Azure requires JSON editing.</strong> The Studio visual UI is designed for OpenAI keys. For Azure AI Foundry you switch to JSON mode to set the <code class="ic-b">azure_endpoint</code> and <code class="ic-b">azure_deployment</code> fields. This takes about 2 minutes and only needs to be done once.</div>
+  </div>
+
+  <div class="ui-steps">
+    <div class="ui-step">
+      <div class="ui-step-num">1</div>
+      <div class="ui-step-body">
+        <strong>Open the Component Library</strong>
+        <p>In the left sidebar, click <strong>Team Builder</strong>. On the right side of the canvas you will see the <strong>Component Library</strong> panel. Click the <strong>Models</strong> tab.</p>
+        <div class="ui-img">Team Builder → Component Library → Models tab</div>
+      </div>
+    </div>
+    <div class="ui-step">
+      <div class="ui-step-num">2</div>
+      <div class="ui-step-body">
+        <strong>Add a new model</strong>
+        <p>Click <strong>+ New Model</strong>. The default template appears as an <code class="ic">OpenAIChatCompletionClient</code>. You will edit this to use Azure.</p>
+      </div>
+    </div>
+    <div class="ui-step">
+      <div class="ui-step-num">3</div>
+      <div class="ui-step-body">
+        <strong>Switch to JSON mode and paste the Azure configuration</strong>
+        <p>Click the <strong>JSON</strong> toggle at the top of the model editor. Replace the entire JSON with the template below, substituting your actual values from <a href="https://ai.azure.com" style="color:var(--maroon)">ai.azure.com</a>:</p>
+
+        <div class="json-block">
+          <div class="jh"><span>Model JSON — paste into Studio</span><button class="cb" onclick="cpj(this)">Copy</button></div>
+          <pre>{
+  <span class="jk">"provider"</span>: <span class="jv">"autogen_ext.models.openai.AzureOpenAIChatCompletionClient"</span>,
+  <span class="jk">"component_type"</span>: <span class="jv">"model"</span>,
+  <span class="jk">"config"</span>: {
+    <span class="jk">"model"</span>: <span class="jv">"gpt-4o"</span>,
+    <span class="jk">"azure_deployment"</span>: <span class="jv">"YOUR-DEPLOYMENT-NAME"</span>,
+    <span class="jk">"azure_endpoint"</span>: <span class="jv">"https://YOUR-PROJECT.openai.azure.com/"</span>,
+    <span class="jk">"api_version"</span>: <span class="jv">"2024-08-01-preview"</span>,
+    <span class="jk">"api_key"</span>: <span class="jv">"YOUR-AZURE-API-KEY"</span>
+  }
+}</pre>
+        </div>
+
+        <table class="et" style="margin-top:.5rem">
+          <thead><tr><th>Field</th><th>Where to find it in Azure</th></tr></thead>
+          <tbody>
+            <tr><td><code>azure_deployment</code></td><td>Azure AI Foundry → Deployments → your GPT-4o deployment name</td></tr>
+            <tr><td><code>azure_endpoint</code></td><td>Project Overview → "Azure AI Foundry endpoint" (ends in .openai.azure.com/)</td></tr>
+            <tr><td><code>api_key</code></td><td>Project Settings → Keys and Endpoint → Key 1</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="ui-step">
+      <div class="ui-step-num">4</div>
+      <div class="ui-step-body">
+        <strong>Save the model and give it a name</strong>
+        <p>Name it something recognizable like <strong>Azure-GPT4o-Foundry</strong>. Click <strong>Save</strong>. The model now appears in your Component Library and can be assigned to any agent.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- STEP 4 -->
+<section class="sec" id="step4">
+  <div class="sh"><div class="sn">4</div><div><div class="slabel">Team 1</div><h2>Build the WebSurfer Team with drag and drop</h2></div></div>
+  <p class="prose">The WebSurfer Team uses the <strong>Web Agent Team</strong> gallery template as a starting point, which already includes MultimodalWebSurfer and AssistantAgent wired together. You then swap the model to your Azure Foundry client.</p>
+
+  <div class="ag" style="margin-bottom:1.2rem">
+    <div class="ac"><div class="act"><div class="ai m">🌐</div><div><h4>MultimodalWebSurfer</h4><div class="role">Browser agent</div></div></div><p>Controls a real Chromium browser — navigates, clicks, scrolls, and extracts text from any web page.</p></div>
+    <div class="ac"><div class="act"><div class="ai b">🤖</div><div><h4>AssistantAgent</h4><div class="role">Synthesizer</div></div></div><p>Reads the browser output and writes a clean, structured summary with key findings.</p></div>
+  </div>
+
+  <div class="flow">
+    <div class="fn2 acc">User task</div><div class="farr">→</div>
+    <div class="fn2">WebSurfer<br><span style="font-size:10px;color:var(--text-hint)">browses web</span></div><div class="farr">→</div>
+    <div class="fn2">Synthesizer<br><span style="font-size:10px;color:var(--text-hint)">summarizes</span></div><div class="farr">→</div>
+    <div class="fn2" style="border-color:var(--gold);color:var(--maroon)">Output</div>
+  </div>
+
+  <p style="color:var(--text-muted);font-size:13px;margin:.5rem 0 1rem">Follow these steps in the Studio browser UI:</p>
+
+  <div class="ui-steps">
+    <div class="ui-step">
+      <div class="ui-step-num">1</div>
+      <div class="ui-step-body">
+        <strong>Start from the Gallery</strong>
+        <p>Click <strong>Gallery</strong> in the left sidebar. Find the <strong>Web Agent Team (Operator)</strong> template card. Click <strong>Use Template</strong>. This opens a pre-wired team in the Team Builder with MultimodalWebSurfer and AssistantAgent already on the canvas.</p>
+        <div class="ui-img">Gallery → "Web Agent Team (Operator)" → Use Template</div>
+      </div>
+    </div>
+    <div class="ui-step">
+      <div class="ui-step-num">2</div>
+      <div class="ui-step-body">
+        <strong>Rename the team</strong>
+        <p>Click the team name at the top of the canvas and rename it to <strong>hw6155 WebSurfer Team</strong>. This keeps it distinct from the gallery default.</p>
+      </div>
+    </div>
+    <div class="ui-step">
+      <div class="ui-step-num">3</div>
+      <div class="ui-step-body">
+        <strong>Update the model on MultimodalWebSurfer</strong>
+        <p>Click the <strong>MultimodalWebSurfer</strong> agent card on the canvas to open its config panel on the right. Click the <strong>Model Client</strong> dropdown. Select <strong>Azure-GPT4o-Foundry</strong> (the model you registered in Step 3). Click <strong>Save</strong>.</p>
+        <div class="ui-img">Click agent → Model Client → Azure-GPT4o-Foundry → Save</div>
+      </div>
+    </div>
+    <div class="ui-step">
+      <div class="ui-step-num">4</div>
+      <div class="ui-step-body">
+        <strong>Update the model on AssistantAgent</strong>
+        <p>Click the <strong>AssistantAgent</strong> card. Repeat the same model swap: Model Client → <strong>Azure-GPT4o-Foundry</strong> → Save.</p>
+      </div>
+    </div>
+    <div class="ui-step">
+      <div class="ui-step-num">5</div>
+      <div class="ui-step-body">
+        <strong>Edit the AssistantAgent system prompt</strong>
+        <p>In the AssistantAgent config panel, find the <strong>System Message</strong> field and replace it with:</p>
+        <div class="sc" style="margin-top:6px">
+          <div class="sch"><span class="scl">System message</span><button class="cb" onclick="cpb(this)">Copy</button></div>
+          <pre>You receive raw web browsing results from WebSurfer. Write a concise,
+well-structured summary with key findings, organized under clear headings.
+End your reply with TERMINATE when the task is complete.</pre>
+        </div>
+      </div>
+    </div>
+    <div class="ui-step">
+      <div class="ui-step-num">6</div>
+      <div class="ui-step-body">
+        <strong>Verify the termination condition</strong>
+        <p>Click the <strong>Team</strong> settings (the outer canvas, not an agent). Confirm the termination condition includes <strong>TextMentionTermination</strong> with the keyword <code class="ic">TERMINATE</code> and <strong>MaxMessageTermination</strong> set to <code class="ic">12</code>. Adjust if needed.</p>
+      </div>
+    </div>
+    <div class="ui-step">
+      <div class="ui-step-num">7</div>
+      <div class="ui-step-body">
+        <strong>Save the team</strong>
+        <p>Click <strong>Save Team</strong> (top right of canvas). Your team is now saved to the <code class="ic">./studio_data</code> folder.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="ib tip" style="margin-top:1rem">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <div><strong>Adding agents by drag and drop:</strong> From the Component Library, drag any agent type onto the canvas. A connector line automatically appears between agents. Drag it to the team orchestrator to wire the message flow. You can also drag agents off the canvas to remove them.</div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- STEP 5 -->
+<section class="sec" id="step5">
+  <div class="sh"><div class="sn">5</div><div><div class="slabel">Team 2</div><h2>Build the Deep Research Team from scratch</h2></div></div>
+  <p class="prose">The Deep Research Team uses a <strong>SelectorGroupChat</strong> orchestration — an LLM dynamically picks which of four agents speaks next. You will build this team from scratch using the Team Builder canvas.</p>
+
+  <div class="ag" style="margin-bottom:1.2rem">
+    <div class="ac"><div class="act"><div class="ai m">📋</div><div><h4>ResearchPlanner</h4><div class="role">Orchestrator</div></div></div><p>Breaks the topic into 3-5 specific sub-questions and assigns them to WebResearcher.</p></div>
+    <div class="ac"><div class="act"><div class="ai b">🌐</div><div><h4>WebResearcher</h4><div class="role">Browser agent</div></div></div><p>MultimodalWebSurfer that executes each sub-question by browsing the web.</p></div>
+    <div class="ac"><div class="act"><div class="ai t">🔍</div><div><h4>Critic</h4><div class="role">Quality check</div></div></div><p>Reviews evidence and flags gaps; asks follow-ups or says APPROVED.</p></div>
+    <div class="ac"><div class="act"><div class="ai a">✍️</div><div><h4>ReportWriter</h4><div class="role">Final output</div></div></div><p>Compiles a structured report with Executive Summary, Key Findings, and Sources.</p></div>
+  </div>
+
+  <div class="flow">
+    <div class="fn2 acc">Task</div><div class="farr">→</div>
+    <div class="fn2">Planner<br><span style="font-size:10px;color:var(--text-hint)">decomposes</span></div><div class="farr">↔</div>
+    <div class="fn2">WebResearcher</div><div class="farr">↔</div>
+    <div class="fn2">Critic</div><div class="farr">→</div>
+    <div class="fn2">Writer<br><span style="font-size:10px;color:var(--text-hint)">final report</span></div>
+  </div>
+  <p style="font-size:12px;color:var(--text-hint);margin:.3rem 0 1rem">The Selector LLM dynamically routes between agents at each turn.</p>
+
+  <div class="ui-steps">
+    <div class="ui-step">
+      <div class="ui-step-num">1</div>
+      <div class="ui-step-body">
+        <strong>Create a new team</strong>
+        <p>In Team Builder, click <strong>+ New Team</strong>. Name it <strong>hw6155 Deep Research Team</strong>. In the Team Type dropdown, select <strong>SelectorGroupChat</strong>. Set the Selector Model to <strong>Azure-GPT4o-Foundry</strong>.</p>
+        <div class="ui-img">+ New Team → SelectorGroupChat → Azure-GPT4o-Foundry as selector</div>
+      </div>
+    </div>
+    <div class="ui-step">
+      <div class="ui-step-num">2</div>
+      <div class="ui-step-body">
+        <strong>Drag an AssistantAgent onto the canvas — ResearchPlanner</strong>
+        <p>In the Component Library, find <strong>AssistantAgent</strong> and drag it onto the canvas. Click it and configure:</p>
+        <p><strong>Name:</strong> <code class="ic">ResearchPlanner</code><br>
+        <strong>Description:</strong> <code class="ic">Decomposes complex research tasks into focused sub-questions</code><br>
+        <strong>Model Client:</strong> Azure-GPT4o-Foundry<br>
+        <strong>System Message:</strong></p>
+        <div class="sc" style="margin-top:6px"><div class="sch"><span class="scl">ResearchPlanner system message</span><button class="cb" onclick="cpb(this)">Copy</button></div>
+<pre>You are a senior research strategist. When given a topic, break it into
+3-5 specific, answerable sub-questions. Assign each to WebResearcher.
+Be concise and precise.</pre></div>
+      </div>
+    </div>
+    <div class="ui-step">
+      <div class="ui-step-num">3</div>
+      <div class="ui-step-body">
+        <strong>Drag a MultimodalWebSurfer — WebResearcher</strong>
+        <p>Find <strong>MultimodalWebSurfer</strong> in the Component Library and drag it onto the canvas. Configure:</p>
+        <p><strong>Name:</strong> <code class="ic">WebResearcher</code><br>
+        <strong>Description:</strong> <code class="ic">Browses the web to answer assigned sub-questions</code><br>
+        <strong>Model Client:</strong> Azure-GPT4o-Foundry<br>
+        <strong>Headless:</strong> ✅ checked (uncheck to watch the browser open live)</p>
+      </div>
+    </div>
+    <div class="ui-step">
+      <div class="ui-step-num">4</div>
+      <div class="ui-step-body">
+        <strong>Drag an AssistantAgent — Critic</strong>
+        <p><strong>Name:</strong> <code class="ic">Critic</code> · <strong>Model Client:</strong> Azure-GPT4o-Foundry<br>
+        <strong>System Message:</strong></p>
+        <div class="sc" style="margin-top:6px"><div class="sch"><span class="scl">Critic system message</span><button class="cb" onclick="cpb(this)">Copy</button></div>
+<pre>You are a rigorous peer reviewer. After WebResearcher reports, assess:
+Are sources credible? Are there gaps? Ask one follow-up question if
+needed, or say APPROVED to proceed.</pre></div>
+      </div>
+    </div>
+    <div class="ui-step">
+      <div class="ui-step-num">5</div>
+      <div class="ui-step-body">
+        <strong>Drag an AssistantAgent — ReportWriter</strong>
+        <p><strong>Name:</strong> <code class="ic">ReportWriter</code> · <strong>Model Client:</strong> Azure-GPT4o-Foundry<br>
+        <strong>System Message:</strong></p>
+        <div class="sc" style="margin-top:6px"><div class="sch"><span class="scl">ReportWriter system message</span><button class="cb" onclick="cpb(this)">Copy</button></div>
+<pre>You are a professional research writer. When Critic says APPROVED,
+compile all findings into a structured report with: Executive Summary,
+Key Findings (3-5), Implications, Sources. End with TERMINATE.</pre></div>
+      </div>
+    </div>
+    <div class="ui-step">
+      <div class="ui-step-num">6</div>
+      <div class="ui-step-body">
+        <strong>Set the Selector Prompt</strong>
+        <p>Click the outer canvas (Team settings). Find the <strong>Selector Prompt</strong> field and paste:</p>
+        <div class="sc" style="margin-top:6px"><div class="sch"><span class="scl">Selector prompt</span><button class="cb" onclick="cpb(this)">Copy</button></div>
+<pre>You are managing a research team. Select the next agent to speak.
+Participants: {participants}
+History: {history}
+Rules:
+- ResearchPlanner speaks first to decompose the task
+- WebResearcher speaks after each sub-question is assigned
+- Critic speaks after each finding to assess quality
+- ReportWriter speaks last to produce the final report
+Reply with ONLY the agent name, nothing else.</pre></div>
+      </div>
+    </div>
+    <div class="ui-step">
+      <div class="ui-step-num">7</div>
+      <div class="ui-step-body">
+        <strong>Configure termination conditions</strong>
+        <p>In Team settings, add two termination conditions:</p>
+        <p>① <strong>TextMentionTermination</strong> — keyword: <code class="ic">TERMINATE</code><br>
+        ② <strong>MaxMessageTermination</strong> — max messages: <code class="ic">20</code></p>
+        <p>Set the combination logic to <strong>OR</strong> (stop when either condition is met).</p>
+      </div>
+    </div>
+    <div class="ui-step">
+      <div class="ui-step-num">8</div>
+      <div class="ui-step-body">
+        <strong>Save the team</strong>
+        <p>Click <strong>Save Team</strong>. Your four-agent Deep Research Team is now saved and ready to run.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="ib note" style="margin-top:1rem">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+    <div><strong>SelectorGroupChat vs RoundRobinGroupChat:</strong> With RoundRobin, agents always take turns in fixed order. With SelectorGroupChat, the Selector LLM reads the conversation history and decides who is most appropriate to speak next — enabling dynamic research depth and conditional retries.</div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- STEP 6 -->
+<section class="sec" id="step6">
+  <div class="sh"><div class="sn">6</div><div><div class="slabel">Execution</div><h2>Run your teams in the Playground</h2></div></div>
+  <p class="prose">The <strong>Playground</strong> is Studio's built-in chat interface. Type a task, hit run, and watch the agents stream their messages in real time — no terminal needed.</p>
+
+  <div class="substeps">
+    <div class="substep">
+      <div class="ssn">a</div>
+      <div class="ssb">
+        <strong>Open the Playground and select your team</strong>
+        <span>Click <strong>Playground</strong> in the left sidebar. Click <strong>+ New Session</strong>. In the Team dropdown, select <strong>hw6155 WebSurfer Team</strong>.</span>
+      </div>
+    </div>
+    <div class="substep">
+      <div class="ssn">b</div>
+      <div class="ssb">
+        <strong>Run the WebSurfer Team</strong>
+        <span>Type a research question in the chat box and press Enter. Try:</span>
+        <div class="sc" style="margin-top:8px"><div class="sch"><span class="scl">Example task</span><button class="cb" onclick="cpb(this)">Copy</button></div>
+<pre>Research the top 3 use cases of AI in supply chain management.
+Find recent examples from 2024-2025.</pre></div>
+        <span style="display:block;margin-top:6px">You will see streaming messages from each agent as WebSurfer navigates and the Synthesizer writes its summary. Typical run: 2–5 minutes.</span>
+      </div>
+    </div>
+    <div class="substep">
+      <div class="ssn">c</div>
+      <div class="ssb">
+        <strong>Run the Deep Research Team</strong>
+        <span>Click <strong>+ New Session</strong> again and select <strong>hw6155 Deep Research Team</strong>. Try:</span>
+        <div class="sc" style="margin-top:8px"><div class="sch"><span class="scl">Example topic</span><button class="cb" onclick="cpb(this)">Copy</button></div>
+<pre>What are the business impacts of large language models on
+knowledge work in financial services? Focus on 2024-2025 evidence.</pre></div>
+        <span style="display:block;margin-top:6px">Watch the Planner decompose the task, WebResearcher browse, Critic review, and ReportWriter compile the final report. Typical run: 5–10 minutes.</span>
+      </div>
+    </div>
+    <div class="substep">
+      <div class="ssn">d</div>
+      <div class="ssb">
+        <strong>Capture your session output for submission</strong>
+        <p>Before closing your session, make sure <strong>"Delete session on close"</strong> is <strong>unchecked</strong> at the top right of the Playground — otherwise AutoGen Studio deletes all message data when you close the panel.</p>
+
+        <p style="margin-top:.6rem">To capture the full run for your submission, follow these steps:</p>
+
+        <div class="ui-steps" style="margin-top:.75rem">
+          <div class="ui-step">
+            <div class="ui-step-num">1</div>
+            <div class="ui-step-body">
+              <strong>Do a clean run</strong>
+              <p>Start a new session with your team and type your research task. Let it run all the way to completion until you see <strong>"Task completed — Stop reason: Text TERMINATE mentioned"</strong>. Do not close the panel during the run.</p>
+            </div>
+          </div>
+          <div class="ui-step">
+            <div class="ui-step-num">2</div>
+            <div class="ui-step-body">
+              <strong>Expand all agent responses</strong>
+              <p>Each agent message in the Playground has a <strong>expand arrow (↕)</strong> or <strong>"Show more"</strong> toggle. Click every one to make sure no content is hidden or truncated before you copy.</p>
+            </div>
+          </div>
+          <div class="ui-step">
+            <div class="ui-step-num">3</div>
+            <div class="ui-step-body">
+              <strong>Select and copy all responses</strong>
+              <p>Click at the very top of the first agent message, then scroll to the bottom and <strong>Shift+click</strong> at the end of the last message to select everything. Press <strong>Ctrl+C</strong> to copy.</p>
+            </div>
+          </div>
+          <div class="ui-step">
+            <div class="ui-step-num">4</div>
+            <div class="ui-step-body">
+              <strong>Paste into a Word document</strong>
+              <p>Open Microsoft Word, create a new document, and press <strong>Ctrl+V</strong> to paste. Add a title with your name, the team name, and the task you ran. Save it as your hw6155 submission file.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="ib tip" style="margin-top:.75rem">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <div><strong>Uncheck "Delete session on close" to save your session permanently.</strong> This checkbox is at the top right of the Playground panel. When it is <strong>unchecked</strong>, AutoGen Studio saves the entire session — every agent message, timestamp, and token count — to the database at <code class="ic-t">.\studio_datautogen04202.db</code>. You can then close the panel safely and come back to review the conversation later. When it is <strong>checked</strong>, all message data is wiped the moment you close the session and cannot be recovered.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ib warn" style="margin-top:1rem">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+    <div>
+      <strong>Common issues:</strong><br>
+      • <em>Model connection error</em> — verify your Azure JSON in the Model Library (Step 3). Check that the endpoint URL ends in <code class="ic-a">.openai.azure.com/</code> with a trailing slash.<br>
+      • <em>Browser not found</em> — run <code class="ic-a">playwright install --with-deps chromium</code> in your active .venv terminal.<br>
+      • <em>Session hangs after 10+ messages</em> — the MaxMessageTermination limit was hit. Increase it in Team settings or rephrase your task to be more specific.
+    </div>
+  </div>
+
+  <div class="ib warn" style="margin-top:.75rem">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+    <div>
+      <strong>429 Too Many Requests — rate limit error:</strong> If you see a <code class="ic-a">openai.RateLimitError: Error code: 429</code> in the Playground, your Azure GPT-4o deployment has hit its tokens-per-minute (TPM) limit. The WebSurfer agent makes many rapid API calls as it browses — each screenshot, navigation decision, and summary is a separate call. Try these fixes in order:<br><br>
+      <strong>1 — Increase your deployment quota in Azure (recommended):</strong><br>
+      Go to <a href="https://ai.azure.com" style="color:var(--amber-t)">ai.azure.com</a> → your project → <strong>Deployments</strong> → click your GPT-4o deployment → <strong>Edit</strong> → increase <strong>Tokens per minute</strong> to 80K or higher. Low quotas like 8K–10K are too small for WebSurfer.<br><br>
+      <strong>2 — Lower the message limit to reduce API calls:</strong><br>
+      In Team Builder, open the Web Agent Team settings and reduce <strong>MaxMessageTermination</strong> from 12 down to 6. Fewer turns = fewer API calls per session.<br><br>
+      <strong>3 — Use a narrower, more specific task:</strong><br>
+      Broad tasks like <em>"research AI in business"</em> cause the agent to browse many pages in many turns. Try something focused that can be answered in 2–3 turns, for example:<br>
+      <em>"What is the official Microsoft AutoGen GitHub URL? Find the current star count."</em><br><br>
+      <strong>4 — Wait 60 seconds and retry:</strong><br>
+      Azure rate limits reset every minute. If you hit the limit, wait a moment and try again with a simpler task first to confirm the connection is working.
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- STEP 7 -->
+<section class="sec" id="step7">
+  <div class="sh"><div class="sn">7</div><div><div class="slabel">Export</div><h2>Export your team to Python code</h2></div></div>
+  <p class="prose">Any team you build in Studio can be exported as a Python JSON configuration and loaded by the AutoGen Python API. This lets you move from no-code prototyping to production code with one click.</p>
+
+  <div class="substeps">
+    <div class="substep">
+      <div class="ssn">a</div>
+      <div class="ssb">
+        <strong>Export the team JSON from Studio</strong>
+        <span>Open your team in Team Builder. Toggle <strong>JSON mode</strong> (the <strong>{ }</strong> button at the top right of the canvas). Copy the entire JSON, or click <strong>Download</strong> to save it as a file — e.g., <code class="ic">websurfer_team.json</code> — in your hw6155 folder.</span>
+      </div>
+    </div>
+    <div class="substep">
+      <div class="ssn">b</div>
+      <div class="ssb">
+        <strong>Load and run the team from Python</strong>
+        <span>Create a file <code class="ic">run_team.py</code> in hw6155 with the following code:</span>
+        <div class="sc" style="margin-top:8px">
+          <div class="sch"><span class="scl">Python — run_team.py</span><button class="cb" onclick="cpb(this)">Copy</button></div>
+          <pre><span class="kw">import</span> asyncio, json
+<span class="kw">from</span> autogen_agentchat.teams <span class="kw">import</span> <span class="cl">TeamManager</span>
+<span class="kw">from</span> autogen_agentchat.ui <span class="kw">import</span> <span class="cl">Console</span>
+
+<span class="kw">async def</span> <span class="fn">main</span>():
+    <span class="cm"># Load the team exported from AutoGen Studio</span>
+    <span class="kw">with</span> <span class="fn">open</span>(<span class="st">"websurfer_team.json"</span>) <span class="kw">as</span> f:
+        team_config = json.<span class="fn">load</span>(f)
+
+    team = <span class="cl">TeamManager</span>.<span class="fn">load_component</span>(team_config)
+
+    task = <span class="st">"Research recent AI applications in healthcare for 2024-2025."</span>
+    stream = team.<span class="fn">run_stream</span>(task=task)
+    <span class="kw">await</span> <span class="cl">Console</span>(stream)
+
+asyncio.<span class="fn">run</span>(<span class="fn">main</span>())</pre>
+        </div>
+      </div>
+    </div>
+    <div class="substep">
+      <div class="ssn">c</div>
+      <div class="ssb">
+        <strong>Run the exported team</strong>
+        <div class="dc">
+          <div class="dct">
+            <button class="dctb mac on" onclick="sw(this,'mac')"><span class="dot"></span>macOS / Linux</button>
+            <button class="dctb win" onclick="sw(this,'win')"><span class="dot"></span>PowerShell</button>
+          </div>
+          <div class="dp on" data-os="mac"><div class="cr"><button class="cb" onclick="cp(this)">Copy</button></div>
+<pre>python3 run_team.py</pre></div>
+          <div class="dp" data-os="win"><div class="cr"><button class="cb" onclick="cp(this)">Copy</button></div>
+<pre>python run_team.py</pre></div>
+        </div>
+        <span style="display:block;margin-top:6px">The team runs exactly as it does in the Playground — same agents, same model, same orchestration — but now from the command line.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ib tip" style="margin-top:1rem">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <div>The exported JSON is exactly the component format used by the AutoGen Python API. You can check it into Git, share it with teammates, or load it in a production application — the Studio UI and Python code are fully interchangeable.</div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- STEP 8 -->
+<section class="sec" id="step8">
+  <div class="sh"><div class="sn">8</div><div><div class="slabel">Learning exercises</div><h2>Exercises to deepen your understanding</h2></div></div>
+  <p class="prose">Try these after completing the base tutorial. Each explores a different dimension of multi-agent system design through the Studio UI.</p>
+
+  <div class="substeps">
+    <div class="substep">
+      <div class="ssn" style="background:#f0ede6;color:var(--maroon)">A</div>
+      <div class="ssb">
+        <strong>Change the research task (WebSurfer Team)</strong>
+        <span>Open a new Playground session with the WebSurfer Team. Try a task relevant to your industry of interest. Observe which web pages the agent visits in the streaming output. How does task specificity affect the quality of the summary?</span>
+      </div>
+    </div>
+    <div class="substep">
+      <div class="ssn" style="background:#f0ede6;color:var(--maroon)">B</div>
+      <div class="ssb">
+        <strong>Watch the browser live</strong>
+        <span>In Team Builder, click the <strong>WebResearcher</strong> agent. Uncheck <strong>Headless</strong> and save. Run a task in the Playground. A visible Chromium browser window opens on your desktop — watch the agent navigate in real time.</span>
+      </div>
+    </div>
+    <div class="substep">
+      <div class="ssn" style="background:#f0ede6;color:var(--maroon)">C</div>
+      <div class="ssb">
+        <strong>Modify the Critic's system message</strong>
+        <span>In Team Builder, edit the Critic agent's system message to be more strict (require 2 follow-up questions) or more lenient (immediately say APPROVED). Run the Deep Research Team on the same topic twice. How does the Critic's behavior change the final report length and quality?</span>
+      </div>
+    </div>
+    <div class="substep">
+      <div class="ssn" style="background:#f0ede6;color:var(--maroon)">D</div>
+      <div class="ssb">
+        <strong>Add a FactChecker agent</strong>
+        <span>Drag a new AssistantAgent onto the Deep Research Team canvas. Name it <code class="ic">FactChecker</code> with a system message instructing it to verify the ReportWriter's claims. Update the Selector Prompt to include FactChecker in the routing rules. How does it change the output?</span>
+      </div>
+    </div>
+    <div class="substep">
+      <div class="ssn" style="background:#f0ede6;color:var(--maroon)">E</div>
+      <div class="ssb">
+        <strong>Switch from SelectorGroupChat to RoundRobinGroupChat</strong>
+        <span>Duplicate your Deep Research Team. Change the Team Type to <strong>RoundRobinGroupChat</strong>. Run both on the same topic. Compare the conversation transcripts in the Playground. When is dynamic selection worth the extra LLM calls?</span>
+      </div>
+    </div>
+    <div class="substep">
+      <div class="ssn" style="background:#f0ede6;color:var(--maroon)">F</div>
+      <div class="ssb">
+        <strong>Export and inspect the JSON</strong>
+        <span>Export both teams as JSON from Studio. Open the files in VS Code. Identify how agents, models, tools, and termination conditions map to the JSON structure. Compare the <code class="ic">provider</code> field between <code class="ic">RoundRobinGroupChat</code> and <code class="ic">SelectorGroupChat</code> configurations.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ib tip" style="margin-top:1.5rem">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <div><strong>Submission for hw6155:</strong> Run the Deep Research Team on a business topic of your choice in the Playground. Download the session JSON. Write a 1-page reflection covering: (1) which agent contributed most to the final report, (2) where you observed the Selector routing incorrectly or the team getting stuck, and (3) one change you would make to improve the team design.</div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  Carlson School of Management · <span>MSBA 6155 Generative AI in Business</span> · hw6155 AutoGen Studio Tutorial
+</footer>
+
+<script>
+function sw(btn, os) {
+  const b = btn.closest('.dc');
+  b.querySelectorAll('.dctb').forEach(t => t.classList.remove('on'));
+  b.querySelectorAll('.dp').forEach(p => p.classList.remove('on'));
+  btn.classList.add('on');
+  b.querySelector('.dp[data-os="'+os+'"]').classList.add('on');
+}
+function cp(btn) {
+  const pre = btn.closest('.dp').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => { btn.textContent='Copied!'; btn.classList.add('ok'); setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('ok');},2000); });
+}
+function cpb(btn) {
+  const pre = btn.closest('.sc, .json-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => { btn.textContent='Copied!'; btn.classList.add('ok'); setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('ok');},2000); });
+}
+const navLinks = document.querySelectorAll('nav a');
+const secs = document.querySelectorAll('.sec');
+function upNav() {
+  let cur = 'overview';
+  secs.forEach(s => { if (window.scrollY >= s.offsetTop - 60) cur = s.id; });
+  navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#'+cur));
+}
+window.addEventListener('scroll', upNav, {passive:true});
+navLinks.forEach(a => { a.addEventListener('click', e => { e.preventDefault(); document.querySelector(a.getAttribute('href'))?.scrollIntoView({behavior:'smooth'}); }); });
+</script>
+</body>
+</html>
