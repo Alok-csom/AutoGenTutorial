@@ -354,6 +354,11 @@ playwright install --with-deps chromium</pre></div>
             By default the agent runs Chromium invisibly in the background (<strong>headless mode</strong>). In Step 5 you can switch to <strong>headless=False</strong> to watch a real browser window open on your screen and the agent navigate by itself in real time — a great classroom demonstration.
           </div>
         </div>
+
+        <div class="ib tip" style="margin-top:.75rem">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <div><strong>You do NOT need a Google Search API, a Bing Search API, or any separate search API key for this tutorial.</strong> WebSurfer doesn't call a search API at all — it opens a real browser (via Playwright), navigates to a search engine's normal web page (Bing, by default, at <code class="ic-t">www.bing.com</code>), types into the search box, clicks results, and reads the resulting page the same way a human would. There's no API to sign up for and no extra key to add to your <code class="ic-t">.env</code> file — your Azure AI Foundry key is the only credential this entire tutorial needs. If a Google API setup screen shows up while you're researching this on your own, you've landed on a different (unrelated) project — close that tab and come back here.</div>
+        </div>
       </div>
     </div>
 
@@ -589,30 +594,36 @@ pip show autogen-core | findstr Version</pre></div>
 
 <!-- STEP 4 -->
 <section class="sec" id="step4">
-  <div class="sh"><div class="sn">4</div><div><div class="slabel">Team 1</div><h2>Build the WebSurfer Team with drag and drop</h2></div></div>
-  <p class="prose">The WebSurfer Team uses the <strong>Web Agent Team</strong> gallery template as a starting point, which already includes MultimodalWebSurfer and AssistantAgent wired together. You then swap the model to your Azure Foundry client.</p>
+  <div class="sh"><div class="sn">4</div><div><div class="slabel">Team 1</div><h2>Understand and configure the WebSurfer Team</h2></div></div>
+  <p class="prose">The <strong>Web Agent Team (Operator)</strong> gallery template already has three agents wired together with working prompts. The goal in this step is <strong>not</strong> to rewrite those prompts from scratch — it's to understand what each one already does, point all three at your Azure model, and only adjust the parts you actually need to change.</p>
+
+  <div class="ib warn" style="margin-bottom:1.2rem">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+    <div><strong>Don't overwrite the selector prompt with a plain summary instruction.</strong> The selector prompt on this template is not a normal agent system message — it's the text the <em>team orchestrator</em> uses to decide who speaks next, and it relies on built-in template variables (<code class="ic-a">{roles}</code>, <code class="ic-a">{participants}</code>, <code class="ic-a">{history}</code>) that Studio fills in automatically every turn. Replacing it with a flat "write a summary and say TERMINATE" instruction breaks the routing logic and duplicates a job that <code class="ic-a">assistant_agent</code> already does correctly.</div>
+  </div>
 
   <div class="ag" style="margin-bottom:1.2rem">
-    <div class="ac"><div class="act"><div class="ai m">🌐</div><div><h4>MultimodalWebSurfer</h4><div class="role">Browser agent</div></div></div><p>Controls a real Chromium browser — navigates, clicks, scrolls, and extracts text from any web page.</p></div>
-    <div class="ac"><div class="act"><div class="ai b">🤖</div><div><h4>AssistantAgent</h4><div class="role">Synthesizer</div></div></div><p>Reads the browser output and writes a clean, structured summary with key findings.</p></div>
+    <div class="ac"><div class="act"><div class="ai m">🌐</div><div><h4>websurfer_agent</h4><div class="role">Browser agent</div></div></div><p>Controls a real Chromium browser — navigates, clicks, scrolls, and extracts text from any web page. Reports raw findings back to the team.</p></div>
+    <div class="ac"><div class="act"><div class="ai b">✅</div><div><h4>assistant_agent</h4><div class="role">Verifier / summarizer</div></div></div><p>Checks whether the task is actually done. If not, says what's left and "keep going." If done, writes the final summary <strong>and says TERMINATE</strong> — this is the only place TERMINATE belongs.</p></div>
+    <div class="ac"><div class="act"><div class="ai t">🙋</div><div><h4>user_proxy</h4><div class="role">Human-in-the-loop</div></div></div><p>Stands in for you. Selected automatically when the team needs human feedback, a preference, or gets stuck — not something you write a system prompt for.</p></div>
   </div>
 
   <div class="flow">
     <div class="fn2 acc">User task</div><div class="farr">→</div>
-    <div class="fn2">WebSurfer<br><span style="font-size:10px;color:var(--text-hint)">browses web</span></div><div class="farr">→</div>
-    <div class="fn2">Synthesizer<br><span style="font-size:10px;color:var(--text-hint)">summarizes</span></div><div class="farr">→</div>
-    <div class="fn2" style="border-color:var(--gold);color:var(--maroon)">Output</div>
+    <div class="fn2">websurfer_agent<br><span style="font-size:10px;color:var(--text-hint)">browses web</span></div><div class="farr">↔</div>
+    <div class="fn2">assistant_agent<br><span style="font-size:10px;color:var(--text-hint)">verifies / "keep going"</span></div><div class="farr">→</div>
+    <div class="fn2" style="border-color:var(--gold);color:var(--maroon)">TERMINATE + final answer</div>
   </div>
+  <p style="font-size:12px;color:var(--text-hint);margin-top:.3rem">user_proxy joins this loop only if the team needs human input — it isn't on the happy-path flow above.</p>
 
-  <p style="color:var(--text-muted);font-size:13px;margin:.5rem 0 1rem">Follow these steps in the Studio browser UI:</p>
+  <p style="color:var(--text-muted);font-size:13px;margin:1rem 0 1rem">Follow these steps in the Studio browser UI:</p>
 
   <div class="ui-steps">
     <div class="ui-step">
       <div class="ui-step-num">1</div>
       <div class="ui-step-body">
         <strong>Start from the Gallery</strong>
-        <p>Click <strong>Gallery</strong> in the left sidebar. Find the <strong>Web Agent Team (Operator)</strong> template card. Click <strong>Use Template</strong>. This opens a pre-wired team in the Team Builder with MultimodalWebSurfer and AssistantAgent already on the canvas.</p>
-        <div class="ui-img">Gallery → "Web Agent Team (Operator)" → Use Template</div>
+        <p>Click <strong>Gallery</strong> in the left sidebar, then the <strong>Teams</strong> tab. Find the <strong>Web Agent Team (Operator)</strong> template card and click <strong>Use Template</strong> (or duplicate it, the same way you duplicated the Azure model in Step 3). This opens the pre-wired team with all three agents — <code class="ic">websurfer_agent</code>, <code class="ic">assistant_agent</code>, <code class="ic">user_proxy</code> — already on the canvas, with their default prompts intact.</p>
       </div>
     </div>
     <div class="ui-step">
@@ -625,49 +636,121 @@ pip show autogen-core | findstr Version</pre></div>
     <div class="ui-step">
       <div class="ui-step-num">3</div>
       <div class="ui-step-body">
-        <strong>Update the model on MultimodalWebSurfer</strong>
-        <p>Click the <strong>MultimodalWebSurfer</strong> agent card on the canvas to open its config panel on the right. Click the <strong>Model Client</strong> dropdown. Select <strong>Azure-GPT4o-Foundry</strong> (the model you registered in Step 3). Click <strong>Save</strong>.</p>
-        <div class="ui-img">Click agent → Model Client → Azure-GPT4o-Foundry → Save</div>
+        <strong>Point every agent at your Azure model</strong>
+        <p>Click <strong>websurfer_agent</strong> on the canvas, open its config panel, and set <strong>Model Client</strong> to the <strong>Azure-GPT4o-Foundry</strong> model you created in Step 3. Click <strong>Save</strong>. Repeat the exact same model swap for <strong>assistant_agent</strong>. (<code class="ic">user_proxy</code> doesn't call a model — it's a stand-in for a human, so there's nothing to configure there.)</p>
       </div>
     </div>
     <div class="ui-step">
       <div class="ui-step-num">4</div>
       <div class="ui-step-body">
-        <strong>Update the model on AssistantAgent</strong>
-        <p>Click the <strong>AssistantAgent</strong> card. Repeat the same model swap: Model Client → <strong>Azure-GPT4o-Foundry</strong> → Save.</p>
+        <strong>Read — don't rewrite — the selector prompt</strong>
+        <p>Open the <strong>Team</strong> settings (click the outer canvas, not an agent) and find the <strong>Selector Prompt</strong> field. This is the default text from your gallery template:</p>
+        <div class="sc" style="margin-top:6px">
+          <div class="sch"><span class="scl">Default selector prompt (leave as-is for now)</span><button class="cb" onclick="cpb(this)">Copy</button></div>
+          <pre>You are the coordinator of a role play game. The following roles are
+available: {roles}. Given a task, the websurfer_agent will be tasked to
+address it by browsing the web and providing information. The
+assistant_agent will be tasked with verifying the information provided
+by the websurfer_agent and summarizing the information to present a
+final answer to the user. If the task needs assistance from a human
+user (e.g., providing feedback, preferences, or the task is stalled),
+you should select the user_proxy role to provide the necessary
+information.
+
+Read the following conversation. Then select the next role from
+{participants} to play. Only return the role.
+
+{history}
+
+Read the above conversation. Then select the next role from
+{participants} to play. Only return the role.</pre>
+        </div>
+        <p style="margin-top:.6rem"><code class="ic">{roles}</code>, <code class="ic">{participants}</code>, and <code class="ic">{history}</code> are <strong>template variables</strong> — Studio substitutes the real role descriptions, agent names, and live conversation into these placeholders on every single turn. This is what lets one short prompt route between three agents intelligently as the conversation unfolds. There's no need to touch this for the base tutorial — it already tells the orchestrator exactly when to pick <code class="ic">websurfer_agent</code>, <code class="ic">assistant_agent</code>, or <code class="ic">user_proxy</code>.</p>
+
+        <p style="margin-top:.75rem"><strong>What each variable actually gets replaced with:</strong></p>
+        <table class="et" style="margin-top:.5rem">
+          <thead><tr><th>Variable</th><th>What it resolves to</th></tr></thead>
+          <tbody>
+            <tr><td><code>{roles}</code></td><td>A list of every agent's <strong>name + description</strong> pulled straight from each agent's config — the same description you typed when you set up that agent. For this team it expands to the websurfer_agent, assistant_agent, and user_proxy descriptions.</td></tr>
+            <tr><td><code>{participants}</code></td><td>Just the <strong>names</strong> of the agents currently on the team, e.g. <code>websurfer_agent, assistant_agent, user_proxy</code>. This is the exact list the selector LLM is told to choose one value from.</td></tr>
+            <tr><td><code>{history}</code></td><td>The <strong>full conversation so far</strong> — every message exchanged between agents and the user up to this point — pasted in as plain text. This is how the selector "knows" what already happened and decides who should logically speak next.</td></tr>
+          </tbody>
+        </table>
+
+        <p style="margin-top:.75rem"><strong>Worked example —</strong> imagine the conversation so far is just the user's task: <em>"What is the capital of France?"</em> Before asking the selector LLM anything, Studio fills in the template like this:</p>
+
+        <div class="sc" style="margin-top:6px">
+          <div class="sch"><span class="scl">What the selector LLM actually receives (variables already filled in)</span></div>
+          <pre>You are the coordinator of a role play game. The following roles are
+available: websurfer_agent - Browses the web to find information,
+assistant_agent - Verifies findings and summarizes the final answer,
+user_proxy - Represents the human user. Given a task, the
+websurfer_agent will be tasked to address it by browsing the web...
+
+Read the following conversation. Then select the next role from
+websurfer_agent, assistant_agent, user_proxy to play. Only return
+the role.
+
+user: What is the capital of France?
+
+Read the above conversation. Then select the next role from
+websurfer_agent, assistant_agent, user_proxy to play. Only return
+the role.</pre>
+        </div>
+        <p style="margin-top:.5rem">The selector LLM reads this and replies with a single word — <code class="ic">websurfer_agent</code> — because nothing has been researched yet. On the <em>next</em> turn, <code class="ic">{history}</code> will have grown to include websurfer_agent's browsing results, and the selector will likely reply <code class="ic">assistant_agent</code> instead, since there's now something to verify and summarize. This re-evaluation happens fresh on every single turn — the selector never "remembers" its last choice, it just re-reads the (now longer) history each time.</p>
       </div>
     </div>
     <div class="ui-step">
       <div class="ui-step-num">5</div>
       <div class="ui-step-body">
-        <strong>Edit the AssistantAgent system prompt</strong>
-        <p>In the AssistantAgent config panel, find the <strong>System Message</strong> field and replace it with:</p>
+        <strong>Understand where TERMINATE actually comes from</strong>
+        <p>Click <strong>assistant_agent</strong> and look at its <strong>System Message</strong> — this is the default, and it's already correct:</p>
         <div class="sc" style="margin-top:6px">
-          <div class="sch"><span class="scl">System message</span><button class="cb" onclick="cpb(this)">Copy</button></div>
-          <pre>You receive raw web browsing results from WebSurfer. Write a concise,
-well-structured summary with key findings, organized under clear headings.
-End your reply with TERMINATE when the task is complete.</pre>
+          <div class="sch"><span class="scl">assistant_agent's default system message (leave as-is for now)</span><button class="cb" onclick="cpb(this)">Copy</button></div>
+          <pre>You are a task verification assistant who is working with a web surfer
+agent to solve tasks. At each point, check if the task has been
+completed as requested by the user. If the websurfer_agent responds
+and the task has not yet been completed, respond with what is left to
+do and then say 'keep going'. If and only when the task has been
+completed, summarize and present a final answer that directly
+addresses the user task in detail and then respond with TERMINATE.</pre>
         </div>
+        <p style="margin-top:.6rem"><strong>This is the only place <code class="ic">TERMINATE</code> should be written.</strong> assistant_agent is doing two jobs at once: verifying whether websurfer_agent's findings actually answer the task, and only producing the final summary + TERMINATE once that check passes. If you separately add a "write a summary and say TERMINATE" instruction somewhere else, you now have two agents that think they're responsible for ending the conversation, which is exactly what was confusing earlier.</p>
       </div>
     </div>
     <div class="ui-step">
       <div class="ui-step-num">6</div>
       <div class="ui-step-body">
-        <strong>Verify the termination condition</strong>
-        <p>Click the <strong>Team</strong> settings (the outer canvas, not an agent). Confirm the termination condition includes <strong>TextMentionTermination</strong> with the keyword <code class="ic">TERMINATE</code> and <strong>MaxMessageTermination</strong> set to <code class="ic">12</code>. Adjust if needed.</p>
+        <strong>Verify the team-level termination condition</strong>
+        <p>Still in Team settings, confirm the termination condition includes <strong>TextMentionTermination</strong> with the keyword <code class="ic">TERMINATE</code> and <strong>MaxMessageTermination</strong> set to <code class="ic">12</code>. This is the safety net that stops the team if assistant_agent's own TERMINATE never fires.</p>
       </div>
     </div>
     <div class="ui-step">
       <div class="ui-step-num">7</div>
       <div class="ui-step-body">
         <strong>Save the team</strong>
-        <p>Click <strong>Save Team</strong> (top right of canvas). Your team is now saved to the <code class="ic">./studio_data</code> folder.</p>
+        <p>Click <strong>Save Team</strong> (top right of canvas). Your team is now saved to the <code class="ic">./studio_data</code> database.</p>
       </div>
     </div>
   </div>
 
   <div class="ib tip" style="margin-top:1rem">
     <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    <div><strong>If you do want to customize behavior later</strong> (Step 8 has exercises for this), edit <code class="ic-t">assistant_agent</code>'s system message directly rather than adding a second, competing set of instructions elsewhere. Keep the verify → "keep going" → summarize → TERMINATE structure, and just change tone, format, or strictness within that structure.</div>
+  </div>
+
+  <div class="ib warn" style="margin-top:1rem">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+    <div>
+      <strong>How to actually provide input when <code class="ic-a">user_proxy</code> is selected — and what NOT to do.</strong><br><br>
+      When the selector picks <code class="ic-a">user_proxy</code> mid-run, the Playground will pause and let you type a message directly into the chat box, right in the same ongoing session. Type your input and send it — the run continues from where it paused, with the full conversation history intact.<br><br>
+      <strong>Do not click "Cancel Run" to inject input.</strong> Cancelling a run does not pause or resume it — it <strong>ends</strong> the run entirely and discards <code class="ic-a">{history}</code>. If you then paste a message and start again, the selector is reading a conversation that contains <em>only</em> your new message — none of what websurfer_agent or assistant_agent already produced. This typically causes the whole team to restart from the beginning, including agents whose description says they should "only speak at the start of a new task," because as far as the team object is concerned, it genuinely is a new task.<br><br>
+      If you build a team where you want a human to weigh in partway through (for example, approving a draft before a final agent finalizes it), make sure <code class="ic-a">user_proxy</code> (or another <code class="ic-a">UserProxyAgent</code>) is an actual participant on the team, and write its description to say clearly when it should be selected — the same way you'd write a description for any other agent. That's the only way to get a real pause-and-resume instead of a destructive restart.
+    </div>
+  </div>
+
+  <div class="ib note" style="margin-top:.75rem">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
     <div><strong>Adding agents by drag and drop:</strong> From the Component Library, drag any agent type onto the canvas. A connector line automatically appears between agents. Drag it to the team orchestrator to wire the message flow. You can also drag agents off the canvas to remove them.</div>
   </div>
 </section>
@@ -677,7 +760,12 @@ End your reply with TERMINATE when the task is complete.</pre>
 <!-- STEP 5 -->
 <section class="sec" id="step5">
   <div class="sh"><div class="sn">5</div><div><div class="slabel">Team 2</div><h2>Build the Deep Research Team from scratch</h2></div></div>
-  <p class="prose">The Deep Research Team uses a <strong>SelectorGroupChat</strong> orchestration — an LLM dynamically picks which of four agents speaks next. You will build this team from scratch using the Team Builder canvas.</p>
+  <p class="prose">The Deep Research Team uses a <strong>SelectorGroupChat</strong> orchestration — an LLM dynamically picks which of four agents speaks next. This time you're building the team yourself rather than starting from a gallery template, which means <strong>you</strong> are responsible for writing a selector prompt that uses the template variables correctly — the same <code class="ic">{roles}</code> / <code class="ic">{participants}</code> / <code class="ic">{history}</code> mechanics you saw in Step 4.</p>
+
+  <div class="ib warn" style="margin-bottom:1.2rem">
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+    <div><strong>Don't hardcode the routing order in the selector prompt.</strong> A tempting shortcut is to write rules like "ResearchPlanner speaks first, then WebResearcher, then Critic, then ReportWriter" directly into the prompt. This works for the happy path but breaks the moment the conversation needs to loop back — for example if Critic asks a follow-up and WebResearcher needs to go again before Critic re-checks. The Web Agent Team template you studied in Step 4 doesn't hardcode an order at all — it describes each agent's <em>role</em> via <code class="ic-a">{roles}</code> and lets the selector LLM reason about what should happen next given the actual conversation in <code class="ic-a">{history}</code>. You'll do the same thing here.</div>
+  </div>
 
   <div class="ag" style="margin-bottom:1.2rem">
     <div class="ac"><div class="act"><div class="ai m">📋</div><div><h4>ResearchPlanner</h4><div class="role">Orchestrator</div></div></div><p>Breaks the topic into 3-5 specific sub-questions and assigns them to WebResearcher.</p></div>
@@ -693,7 +781,7 @@ End your reply with TERMINATE when the task is complete.</pre>
     <div class="fn2">Critic</div><div class="farr">→</div>
     <div class="fn2">Writer<br><span style="font-size:10px;color:var(--text-hint)">final report</span></div>
   </div>
-  <p style="font-size:12px;color:var(--text-hint);margin:.3rem 0 1rem">The Selector LLM dynamically routes between agents at each turn.</p>
+  <p style="font-size:12px;color:var(--text-hint);margin:.3rem 0 1rem">This is the <em>typical</em> path — but with a good selector prompt, the LLM can also loop Critic ↔ WebResearcher more than once before reaching ReportWriter, which a hardcoded rule list cannot express.</p>
 
   <div class="ui-steps">
     <div class="ui-step">
@@ -701,7 +789,6 @@ End your reply with TERMINATE when the task is complete.</pre>
       <div class="ui-step-body">
         <strong>Create a new team</strong>
         <p>In Team Builder, click <strong>+ New Team</strong>. Name it <strong>hw6155 Deep Research Team</strong>. In the Team Type dropdown, select <strong>SelectorGroupChat</strong>. Set the Selector Model to <strong>Azure-GPT4o-Foundry</strong>.</p>
-        <div class="ui-img">+ New Team → SelectorGroupChat → Azure-GPT4o-Foundry as selector</div>
       </div>
     </div>
     <div class="ui-step">
@@ -710,13 +797,22 @@ End your reply with TERMINATE when the task is complete.</pre>
         <strong>Drag an AssistantAgent onto the canvas — ResearchPlanner</strong>
         <p>In the Component Library, find <strong>AssistantAgent</strong> and drag it onto the canvas. Click it and configure:</p>
         <p><strong>Name:</strong> <code class="ic">ResearchPlanner</code><br>
-        <strong>Description:</strong> <code class="ic">Decomposes complex research tasks into focused sub-questions</code><br>
-        <strong>Model Client:</strong> Azure-GPT4o-Foundry<br>
-        <strong>System Message:</strong></p>
+        <strong>Model Client:</strong> Azure-GPT4o-Foundry</p>
+        <p style="margin-top:.5rem"><strong>Description — this is what fills <code class="ic">{roles}</code>, write it carefully:</strong></p>
+        <div class="sc" style="margin-top:6px"><div class="sch"><span class="scl">ResearchPlanner description</span><button class="cb" onclick="cpb(this)">Copy</button></div>
+<pre>Breaks a research topic into 3-5 specific, answerable sub-questions
+and assigns them one at a time to WebResearcher. Should speak first
+when a new topic arrives, and again later only if the Critic identifies
+a gap that needs a new sub-question.</pre></div>
+        <p style="margin-top:.5rem"><strong>System Message — governs how it actually behaves once selected:</strong></p>
         <div class="sc" style="margin-top:6px"><div class="sch"><span class="scl">ResearchPlanner system message</span><button class="cb" onclick="cpb(this)">Copy</button></div>
 <pre>You are a senior research strategist. When given a topic, break it into
 3-5 specific, answerable sub-questions. Assign each to WebResearcher.
 Be concise and precise.</pre></div>
+        <div class="ib note" style="margin-top:.6rem">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <div><strong>Description vs system message — different jobs.</strong> The <strong>Description</strong> field is what the selector LLM reads via <code class="ic-b">{roles}</code> to decide <em>whether to pick this agent next</em>. The <strong>System Message</strong> is what the agent itself reads to decide <em>what to actually say</em> once picked. A vague description ("does research planning") gives the selector nothing to reason with; a specific one (as above) tells it exactly when this agent should and shouldn't be chosen.</div>
+        </div>
       </div>
     </div>
     <div class="ui-step">
@@ -725,17 +821,27 @@ Be concise and precise.</pre></div>
         <strong>Drag a MultimodalWebSurfer — WebResearcher</strong>
         <p>Find <strong>MultimodalWebSurfer</strong> in the Component Library and drag it onto the canvas. Configure:</p>
         <p><strong>Name:</strong> <code class="ic">WebResearcher</code><br>
-        <strong>Description:</strong> <code class="ic">Browses the web to answer assigned sub-questions</code><br>
         <strong>Model Client:</strong> Azure-GPT4o-Foundry<br>
         <strong>Headless:</strong> ✅ checked (uncheck to watch the browser open live)</p>
+        <p style="margin-top:.5rem"><strong>Description:</strong></p>
+        <div class="sc" style="margin-top:6px"><div class="sch"><span class="scl">WebResearcher description</span><button class="cb" onclick="cpb(this)">Copy</button></div>
+<pre>Browses the web to answer one assigned sub-question at a time. Should
+be selected right after ResearchPlanner assigns a sub-question, or
+again after Critic requests more evidence on a specific point.</pre></div>
       </div>
     </div>
     <div class="ui-step">
       <div class="ui-step-num">4</div>
       <div class="ui-step-body">
         <strong>Drag an AssistantAgent — Critic</strong>
-        <p><strong>Name:</strong> <code class="ic">Critic</code> · <strong>Model Client:</strong> Azure-GPT4o-Foundry<br>
-        <strong>System Message:</strong></p>
+        <p><strong>Name:</strong> <code class="ic">Critic</code> · <strong>Model Client:</strong> Azure-GPT4o-Foundry</p>
+        <p style="margin-top:.5rem"><strong>Description:</strong></p>
+        <div class="sc" style="margin-top:6px"><div class="sch"><span class="scl">Critic description</span><button class="cb" onclick="cpb(this)">Copy</button></div>
+<pre>Reviews WebResearcher's most recent finding for credibility and gaps.
+Should be selected immediately after WebResearcher reports. Either asks
+a follow-up question (sending the conversation back to WebResearcher or
+ResearchPlanner) or says APPROVED, which hands off to ReportWriter.</pre></div>
+        <p style="margin-top:.5rem"><strong>System Message:</strong></p>
         <div class="sc" style="margin-top:6px"><div class="sch"><span class="scl">Critic system message</span><button class="cb" onclick="cpb(this)">Copy</button></div>
 <pre>You are a rigorous peer reviewer. After WebResearcher reports, assess:
 Are sources credible? Are there gaps? Ask one follow-up question if
@@ -746,8 +852,13 @@ needed, or say APPROVED to proceed.</pre></div>
       <div class="ui-step-num">5</div>
       <div class="ui-step-body">
         <strong>Drag an AssistantAgent — ReportWriter</strong>
-        <p><strong>Name:</strong> <code class="ic">ReportWriter</code> · <strong>Model Client:</strong> Azure-GPT4o-Foundry<br>
-        <strong>System Message:</strong></p>
+        <p><strong>Name:</strong> <code class="ic">ReportWriter</code> · <strong>Model Client:</strong> Azure-GPT4o-Foundry</p>
+        <p style="margin-top:.5rem"><strong>Description:</strong></p>
+        <div class="sc" style="margin-top:6px"><div class="sch"><span class="scl">ReportWriter description</span><button class="cb" onclick="cpb(this)">Copy</button></div>
+<pre>Writes the final structured report once Critic has said APPROVED.
+Should only be selected after an APPROVED message — never before all
+sub-questions have been researched and reviewed.</pre></div>
+        <p style="margin-top:.5rem"><strong>System Message:</strong></p>
         <div class="sc" style="margin-top:6px"><div class="sch"><span class="scl">ReportWriter system message</span><button class="cb" onclick="cpb(this)">Copy</button></div>
 <pre>You are a professional research writer. When Critic says APPROVED,
 compile all findings into a structured report with: Executive Summary,
@@ -757,18 +868,22 @@ Key Findings (3-5), Implications, Sources. End with TERMINATE.</pre></div>
     <div class="ui-step">
       <div class="ui-step-num">6</div>
       <div class="ui-step-body">
-        <strong>Set the Selector Prompt</strong>
-        <p>Click the outer canvas (Team settings). Find the <strong>Selector Prompt</strong> field and paste:</p>
-        <div class="sc" style="margin-top:6px"><div class="sch"><span class="scl">Selector prompt</span><button class="cb" onclick="cpb(this)">Copy</button></div>
-<pre>You are managing a research team. Select the next agent to speak.
-Participants: {participants}
-History: {history}
-Rules:
-- ResearchPlanner speaks first to decompose the task
-- WebResearcher speaks after each sub-question is assigned
-- Critic speaks after each finding to assess quality
-- ReportWriter speaks last to produce the final report
-Reply with ONLY the agent name, nothing else.</pre></div>
+        <strong>Write a selector prompt that uses all three variables</strong>
+        <p>Click the outer canvas (Team settings). Find the <strong>Selector Prompt</strong> field. Instead of listing a fixed turn order, write a prompt that leans on <code class="ic">{roles}</code> to describe the team and lets the selector reason using <code class="ic">{history}</code> — this is the same structure as the Web Agent Team's default prompt from Step 4:</p>
+        <div class="sc" style="margin-top:6px"><div class="sch"><span class="scl">Selector prompt — uses {roles}, {participants}, {history}</span><button class="cb" onclick="cpb(this)">Copy</button></div>
+<pre>You are coordinating a research team. The following roles are
+available: {roles}
+
+Read the conversation so far and decide which single role should act
+next, based on what each role's description says it is responsible
+for and what has or hasn't happened yet in the conversation.
+
+Conversation so far:
+{history}
+
+Select the next role from {participants} to act. Only return the
+role name, nothing else.</pre></div>
+        <p style="margin-top:.6rem">Notice what changed: there is no hardcoded "ResearchPlanner speaks first, then WebResearcher..." rule anywhere. The routing logic now lives entirely in the <strong>agent descriptions</strong> you wrote in steps 2–5 — exactly the same division of labor as the real Web Agent Team template. If Critic asks a follow-up, the selector can send the conversation back to WebResearcher or ResearchPlanner because their descriptions say that's a valid reason to pick them, instead of being stuck following a fixed sequence that has no "go back" option.</p>
       </div>
     </div>
     <div class="ui-step">
@@ -778,7 +893,7 @@ Reply with ONLY the agent name, nothing else.</pre></div>
         <p>In Team settings, add two termination conditions:</p>
         <p>① <strong>TextMentionTermination</strong> — keyword: <code class="ic">TERMINATE</code><br>
         ② <strong>MaxMessageTermination</strong> — max messages: <code class="ic">20</code></p>
-        <p>Set the combination logic to <strong>OR</strong> (stop when either condition is met).</p>
+        <p>Set the combination logic to <strong>OR</strong> (stop when either condition is met). As in Step 4, <code class="ic">TERMINATE</code> should only ever appear in ReportWriter's system message — it's the one agent whose job is to end the conversation, the same way assistant_agent was the only place TERMINATE belonged in the WebSurfer Team.</p>
       </div>
     </div>
     <div class="ui-step">
@@ -792,7 +907,7 @@ Reply with ONLY the agent name, nothing else.</pre></div>
 
   <div class="ib note" style="margin-top:1rem">
     <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-    <div><strong>SelectorGroupChat vs RoundRobinGroupChat:</strong> With RoundRobin, agents always take turns in fixed order. With SelectorGroupChat, the Selector LLM reads the conversation history and decides who is most appropriate to speak next — enabling dynamic research depth and conditional retries.</div>
+    <div><strong>SelectorGroupChat vs RoundRobinGroupChat:</strong> With RoundRobin, agents always take turns in fixed order. With SelectorGroupChat, the Selector LLM reads <code class="ic-b">{roles}</code> and <code class="ic-b">{history}</code> together and decides who is most appropriate to speak next — enabling dynamic research depth, conditional retries, and loops back to an earlier agent when needed, none of which a fixed turn order or a hardcoded rule list can do.</div>
   </div>
 </section>
 
@@ -819,7 +934,7 @@ Reply with ONLY the agent name, nothing else.</pre></div>
         <div class="sc" style="margin-top:8px"><div class="sch"><span class="scl">Example task</span><button class="cb" onclick="cpb(this)">Copy</button></div>
 <pre>Research the top 3 use cases of AI in supply chain management.
 Find recent examples from 2024-2025.</pre></div>
-        <span style="display:block;margin-top:6px">You will see streaming messages from each agent as WebSurfer navigates and the Synthesizer writes its summary. Typical run: 2–5 minutes.</span>
+        <span style="display:block;margin-top:6px">You will see streaming messages from each agent as websurfer_agent browses and assistant_agent verifies the findings, says "keep going" if more research is needed, or writes the final summary with TERMINATE once the task is done. Typical run: 2–5 minutes.</span>
       </div>
     </div>
     <div class="substep">
@@ -992,7 +1107,7 @@ asyncio.<span class="fn">run</span>(<span class="fn">main</span>())</pre>
       <div class="ssn" style="background:#f0ede6;color:var(--maroon)">B</div>
       <div class="ssb">
         <strong>Watch the browser live</strong>
-        <span>In Team Builder, click the <strong>WebResearcher</strong> agent. Uncheck <strong>Headless</strong> and save. Run a task in the Playground. A visible Chromium browser window opens on your desktop — watch the agent navigate in real time.</span>
+        <span>In Team Builder, open the hw6155 WebSurfer Team and click the <strong>websurfer_agent</strong> card. Uncheck <strong>Headless</strong> and save. Run a task in the Playground. A visible Chromium browser window opens on your desktop — watch the agent navigate in real time.</span>
       </div>
     </div>
     <div class="substep">
@@ -1006,7 +1121,7 @@ asyncio.<span class="fn">run</span>(<span class="fn">main</span>())</pre>
       <div class="ssn" style="background:#f0ede6;color:var(--maroon)">D</div>
       <div class="ssb">
         <strong>Add a FactChecker agent</strong>
-        <span>Drag a new AssistantAgent onto the Deep Research Team canvas. Name it <code class="ic">FactChecker</code> with a system message instructing it to verify the ReportWriter's claims. Update the Selector Prompt to include FactChecker in the routing rules. How does it change the output?</span>
+        <span>Drag a new AssistantAgent onto the Deep Research Team canvas. Name it <code class="ic">FactChecker</code>, give it a system message instructing it to verify ReportWriter's claims against the original research, and — this is the key part — write a clear <strong>Description</strong> stating when it should be picked (e.g., "Reviews the report after ReportWriter drafts it, before TERMINATE"). You should <strong>not</strong> need to touch the Selector Prompt itself at all if the description is specific enough — the selector reads it via <code class="ic">{roles}</code> automatically. Does the team route to FactChecker correctly without any prompt edits? If not, what was missing from the description?</span>
       </div>
     </div>
     <div class="substep">
@@ -1021,6 +1136,13 @@ asyncio.<span class="fn">run</span>(<span class="fn">main</span>())</pre>
       <div class="ssb">
         <strong>Export and inspect the JSON</strong>
         <span>Export both teams as JSON from Studio. Open the files in VS Code. Identify how agents, models, tools, and termination conditions map to the JSON structure. Compare the <code class="ic">provider</code> field between <code class="ic">RoundRobinGroupChat</code> and <code class="ic">SelectorGroupChat</code> configurations.</span>
+      </div>
+    </div>
+    <div class="substep">
+      <div class="ssn" style="background:#f0ede6;color:var(--maroon)">G</div>
+      <div class="ssb">
+        <strong>Trace where TERMINATE actually comes from</strong>
+        <span>In the hw6155 WebSurfer Team, run a task and watch the message stream closely. Identify exactly which agent's message contains the word TERMINATE, and confirm it only ever comes from <code class="ic">assistant_agent</code> after it has verified the task is complete — never from <code class="ic">websurfer_agent</code> directly. Then look at the Selector Prompt again: explain in your own words what <code class="ic">{roles}</code>, <code class="ic">{participants}</code>, and <code class="ic">{history}</code> each get replaced with on a real turn. This distinction — selector prompt (routing) vs. agent system message (behavior) — is the most common source of confusion when first building teams in Studio.</span>
       </div>
     </div>
   </div>
